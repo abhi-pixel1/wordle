@@ -1,6 +1,8 @@
 #include <iostream>
 #include <vector>
+#include <string>
 #include <unordered_set>
+#include <fstream>
 #include <algorithm>
 using namespace std;
 
@@ -43,24 +45,6 @@ struct Node {
         return flag;
     }
 };
-
-// struct Description {
-//     vector<char> l1;
-//     vector<char> l2;
-//     vector<char> l3;
-//     vector<char> l4;
-//     vector<char> l5;
-
-//     Description() {
-//         for(char letter = 'a'; letter<='z'; letter++){
-//             l1.push_back(letter);
-//             l2.push_back(letter);
-//             l3.push_back(letter);
-//             l4.push_back(letter);
-//             l5.push_back(letter);
-//         }
-//     }
-// };
 
 // Wordle class
 class Wordle {
@@ -191,24 +175,33 @@ public:
 
 
 int main() {
-    Wordle wordle(5);
-    cout << "Inserting words: Striver, Striving, String, Strike" << endl;
-    // wordle.insert("striver");
-    // wordle.insert("striving");
-    // wordle.insert("string");
-    // wordle.insert("strike");
+    int word_length = 5;
+    Wordle wordle(word_length);
 
-    wordle.populate_dictionary({"abcde", "after", "altef", "birto", "axaya"});
-    
-    cout << "Search if abcde exists in trie: " <<
-    (wordle.search("abcde") ? "True" : "False")<< endl;
-    
-    cout << "Search if axaya exists in trie: " <<
-    (wordle.search("axaya") ? "True" : "False" )<< endl;
+    ifstream dictionary("dictionary.txt");
+    string word;
+    while (getline (dictionary, word)) {
+        wordle.insert(word);
+    }
+    dictionary.close();
 
-    wordle.update_description("afxgh", "gxxxx");
+    while(true){
+        cout<< "enter guess: ";
+        string input;
+        cin >> input;
+        
+        string guess = input.substr(0, word_length);
+        string feedback = input.substr(6, word_length);
 
-    wordle.surf();
+        cout<< endl;
+
+        wordle.update_description(guess, feedback);
+        wordle.surf();
+
+        cout<< endl;
+    }
+
+
 
     return 0;
 }
