@@ -82,7 +82,7 @@ The program will print all matching words that comply with the cumulative descri
 - Flexible Word Length (L): Works for any word length by changing a single parameter.
 - Real-Time Iteration: Interactive loop allows continuous guessing and feedback.
 
-## :bowtie: Author
+## :godmode: Author
 
 This tool was designed to explore one of the most efficient logics for solving Wordle using structured filtering and optimized Trie traversal.
 
