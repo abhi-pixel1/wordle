@@ -42,17 +42,6 @@ This means:
 
 The description gets updated accordingly and helps filter the dictionary.
 
-## 📂 Dictionary Format
-
-The file `dictionary.txt` should contain one word per line. All words must be the same length (`L`). The program reads this file and builds the Trie accordingly.
-
-## 🚀 Running the Program
-
-```bash
-g++ -std=c++11 wordle_solver.cpp -o wordle_solver
-./wordle_solver
-```
-
 ## Input Format
 On each iteration, input your guess and the feedback in this format:
 
