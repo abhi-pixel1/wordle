@@ -2,45 +2,37 @@
 #include <vector>
 #include <string>
 #include <unordered_set>
+#include <map>
 #include <fstream>
 #include <algorithm>
 using namespace std;
 
 // Node structure for Trie
 struct Node {
-    // Array to store links to child nodes,
-    // each index represents a letter
     Node* links[26];
-    // Flag indicating if the node
-    // marks the end of a word
     bool flag = false;
 
-    // Check if the node contains
-    // a specific key (letter)
+    // Check if the node contains a specific key (letter)
     bool containsKey(char ch) {
         return links[ch - 'a'] != NULL;
     }
 
-    // Insert a new node with a specific
-    // key (letter) into the Trie
+    // Insert a new node with a specific key (letter) into the Trie
     void put(char ch, Node* node) {
         links[ch - 'a'] = node;
     }
 
-    // Get the node with a specific
-    // key (letter) from the Trie
+    // Get the node with a specific key (letter) from the Trie
     Node* get(char ch) {
         return links[ch - 'a'];
     }
 
-    // Set the current node
-    // as the end of a word
+    // Set the current node as the end of a word
     void setEnd() {
         flag = true;
     }
 
-    // Check if the current node
-    // marks the end of a word
+    // Check if the current node marks the end of a word
     bool isEnd() {
         return flag;
     }
@@ -56,35 +48,32 @@ private:
 
 
 public:
-    // Constructor to initialize the
-    // Trie with an empty root node
+    // Constructor
     Wordle(int word_length) {
         trie = new Node();
 
         this->word_length = word_length;
 
-        for(int i=0; i<word_length; i++){
-            scope.push_back({});
+        scope.resize(word_length);
+
+        vector<char> all_letters;
+        for (char letter = 'a'; letter <= 'z'; ++letter) {
+            all_letters.push_back(letter);
         }
 
-        for(char letter = 'a'; letter<='z'; letter++){
-            scope[0].push_back(letter);
-            scope[1].push_back(letter);
-            scope[2].push_back(letter);
-            scope[3].push_back(letter);
-            scope[4].push_back(letter);
+        for (int i = 0; i < word_length; ++i) {
+            scope[i] = all_letters;
         }
     }
 
     // Inserts a word into the Trie
-    // Time Complexity O(len), where len
-    // is the length of the word
     void insert(string word) {
+        if(word.size() != word_length){ cout<< "======================400============================="; return; }
+
         Node* node = trie;
         for (int i = 0; i < word.length(); i++) {
             if (!node->containsKey(word[i])) {
-                // Create a new node for
-                // the letter if not present
+                // Create a new node for the letter if not present
                 node->put(word[i], new Node());
             }
             // Move to the next node
@@ -101,46 +90,54 @@ public:
         }
     }
 
-    void update_description(string guess, string colors){
+    // update the description based on the new guess
+    void update_description(string guess, string feedback){
+        if(guess.size() != word_length || feedback.size() != word_length){ cout<< "======================400============================="; return; }
+
+        map<char, char> feed_map;
         for(int i=0; i<word_length; i++){
-            if(colors[i] == 'g'){
+            if(feed_map.find(guess[i]) == feed_map.end()){
+                feed_map[guess[i]] = feedback[i];
+            }
+        }
+
+        for(int i=0; i<word_length; i++){
+            if(feed_map[guess[i]] == 'g'){
                 scope[i] = {guess[i]};
             }
-            else if(colors[i] == 'y'){
+            else if(feed_map[guess[i]] == 'y'){
                 scope[i].erase(std::remove(scope[i].begin(), scope[i].end(), guess[i]), scope[i].end()); // Erase–remove idiom
                 include.insert(guess[i]);
             }
-            else if(colors[i] == 'x'){
-                scope[0].erase(std::remove(scope[0].begin(), scope[0].end(), guess[i]), scope[0].end());
-                scope[1].erase(std::remove(scope[1].begin(), scope[1].end(), guess[i]), scope[1].end());
-                scope[2].erase(std::remove(scope[2].begin(), scope[2].end(), guess[i]), scope[2].end());
-                scope[3].erase(std::remove(scope[3].begin(), scope[3].end(), guess[i]), scope[3].end());
-                scope[4].erase(std::remove(scope[4].begin(), scope[4].end(), guess[i]), scope[4].end());
+            else if(feed_map[guess[i]] == 'x'){
+                for(int j=0; j<word_length; j++){
+                    scope[j].erase(std::remove(scope[j].begin(), scope[j].end(), guess[i]), scope[j].end());
+                }
             }
+
+            feed_map.erase(guess[i]);
         }
     }
 
-    // Returns if the word
-    // is in the trie
+    // Returns if the word is in the trie
     bool search(string word) {
         Node* node = trie;
         for (int i = 0; i < word.length(); i++) {
             if (!node->containsKey(word[i])) {
-                // If a letter is not found,
-                // the word is not in the Trie
+                // If a letter is not found, the word is not in the Trie
                 return false;
             }
             // Move to the next node
             node = node->get(word[i]);
         }
-        // Check if the last node
-        // marks the end of a word
+        // Check if the last node marks the end of a word
         return node->isEnd();
     }
 
-    vector<string> surf(){
+    // apply the description filter on the trie and get the words that match the filter
+    vector<string> filter(){
         vector<string> hits;
-        rec(0, trie, "", hits, include);
+        crawl(0, trie, "", hits, include);
 
         cout<< hits.size()<< " matches"<< endl;
 
@@ -153,19 +150,21 @@ public:
         return hits;
     }
 
-    void rec(int level, Node* node, string curr_word, vector<string>& hits, unordered_set<char> include){
+    // DFS traversal through the trie
+    void crawl(int level, Node* node, string curr_word, vector<string>& hits, unordered_set<char> include){
         if(node->isEnd()){
+            // push to hits only if all the "include" letters are in the word
             if(include.empty()){ hits.push_back(curr_word); }
             return;
         }
 
-        vector<char> search_space = scope[level];
+        vector<char> possible_chars = scope[level];
 
-        for(int i=0; i<search_space.size(); i++){
-            if(node->containsKey(search_space[i])){
-                int flag = include.erase(search_space[i]);
-                rec(level+1, node->get(search_space[i]), curr_word+search_space[i], hits, include);
-                if(flag) { include.insert(search_space[i]); }
+        for(int i=0; i<possible_chars.size(); i++){
+            if(node->containsKey(possible_chars[i])){
+                int is_erased = include.erase(possible_chars[i]);
+                crawl(level+1, node->get(possible_chars[i]), curr_word+possible_chars[i], hits, include);
+                if(is_erased) { include.insert(possible_chars[i]); }
             }
         }
 
@@ -191,12 +190,12 @@ int main() {
         cin >> input;
         
         string guess = input.substr(0, word_length);
-        string feedback = input.substr(6, word_length);
+        string feedback = input.substr(word_length+1, word_length);
 
         cout<< endl;
 
         wordle.update_description(guess, feedback);
-        wordle.surf();
+        wordle.filter();
 
         cout<< endl;
     }
