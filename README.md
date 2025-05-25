@@ -1,1 +1,102 @@
-# wordle
+
+# Wordle Solver using Trie
+
+This project implements an efficient Wordle assistant to help narrow down possible target words based on feedback from your guesses. It uses a **Trie**-based approach and a filtering logic that leverages a concise description of the feedback received in each attempt.
+
+
+## 🧩 Problem Statement
+
+[Wordle](https://www.nytimes.com/games/wordle/index.html) is a word guessing game where:
+- You must guess a hidden word of fixed length `L`.
+- For each guess, you receive a **description** consisting of:
+  - 🟩 **Green (g)**: Correct letter in the correct position.
+  - 🟨 **Yellow (y)**: Correct letter in the wrong position.
+  - ⬜ **Grey (x)**: Letter not in the word at all.
+
+Your task is to efficiently filter a large dictionary of words (`n` total words) and return all valid candidates that match the accumulated description over multiple guesses.
+
+## 🛠️ How It Works
+
+This solver uses:
+- A **Trie** data structure to store and traverse the dictionary of words.
+- A **description-based filter** (implemented via scoped letter sets and inclusion constraints).
+- A **DFS-based traversal** of the Trie to efficiently generate the list of valid words.
+
+### 📘 Terminology
+
+| Term         | Description                                                                 |
+|--------------|-----------------------------------------------------------------------------|
+| `L`          | Length of each word. All words in the dictionary are of the same length.   |
+| `n`          | Number of words in the dictionary.                                          |
+| `description`| A mapping derived from feedback (Green, Yellow, Grey) for a given guess.    |
+
+## 🔍 Example
+
+Given a guess: `table`  
+And feedback: `xgxyx`  
+This means:
+- `t` is not in the word (grey),
+- `a` is correct and in the correct position (green),
+- `b` is in the word but at a different position (yellow),
+- `l`, `e` are not in the word.
+
+The description gets updated accordingly and helps filter the dictionary.
+
+## 📂 Dictionary Format
+
+The file `dictionary.txt` should contain one word per line. All words must be the same length (`L`). The program reads this file and builds the Trie accordingly.
+
+## 🚀 Running the Program
+
+```bash
+g++ -std=c++11 wordle_solver.cpp -o wordle_solver
+./wordle_solver
+```
+
+## Input Format
+On each iteration, input your guess and the feedback in this format:
+
+```bash
+GUESS FEEDBACK
+```
+
+###### Example:
+
+```bash
+table xgxyx
+```
+
+The program will print all matching words that comply with the cumulative description so far.
+
+## 📊 Time and Space Complexity
+
+### 🧠 Space Complexity:
+
+- Trie storage: O(n * L) for n words of length L.
+- Scope matrix: O(26 * L) worst case, storing all possible letters per position.
+- Include set: O(26) (constant space).
+
+**Total**: O(n * L)
+
+### ⏱️ Time Complexity:
+- Insertion of all words: O(n * L)
+- Each guess filtering:
+    - Worst-case DFS traversal: O(k), where k is the number of matching nodes in the Trie, bounded by filtered candidate words.
+    - Filtering is pruned using scoped allowed characters and inclusion set.
+
+**Efficient for reasonable dictionary sizes** (n ≈ 10⁴–10⁵).
+
+## 🧠 Features & Design Highlights
+
+- Robust Feedback Handling: Handles multiple occurrences of letters gracefully using a per-letter feed_map.
+- Efficient Filtering: Prunes non-matching branches early using scope constraints and inclusion requirements.
+- Flexible Word Length (L): Works for any word length by changing a single parameter.
+- Real-Time Iteration: Interactive loop allows continuous guessing and feedback.
+
+## 📌 Author
+
+This tool was designed to explore one of the most efficient logics for solving Wordle using structured filtering and optimized Trie traversal.
+
+## 📃 License
+
+This project is released under the MIT License.
