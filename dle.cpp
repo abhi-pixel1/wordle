@@ -94,28 +94,36 @@ public:
     void update_description(string guess, string feedback){
         if(guess.size() != word_length || feedback.size() != word_length){ cout<< "======================400============================="; return; }
 
-        map<char, char> feed_map;
+        map<char, int> char_freq;
         for(int i=0; i<word_length; i++){
-            if(feed_map.find(guess[i]) == feed_map.end()){
-                feed_map[guess[i]] = feedback[i];
+            char_freq[guess[i]]++;
+        }
+
+        // green pass
+        for(int i=0; i<word_length; i++){
+            if(feedback[i] == 'g' && char_freq[guess[i]]){
+                scope[i] = {guess[i]};
+                char_freq[guess[i]]--;
             }
         }
 
+        // yellow pass
         for(int i=0; i<word_length; i++){
-            if(feed_map[guess[i]] == 'g'){
-                scope[i] = {guess[i]};
-            }
-            else if(feed_map[guess[i]] == 'y'){
+            if(feedback[i] == 'y' && char_freq[guess[i]]){
                 scope[i].erase(std::remove(scope[i].begin(), scope[i].end(), guess[i]), scope[i].end()); // Erase–remove idiom
                 include.insert(guess[i]);
+                char_freq[guess[i]]--;
             }
-            else if(feed_map[guess[i]] == 'x'){
-                for(int j=0; j<word_length; j++){
+        }
+
+        // grey pass
+        for(int i=0; i<word_length; i++){
+            if(feedback[i] == 'x' && char_freq[guess[i]]){
+               for(int j=0; j<word_length; j++){
                     scope[j].erase(std::remove(scope[j].begin(), scope[j].end(), guess[i]), scope[j].end());
                 }
+                char_freq[guess[i]]--;
             }
-
-            feed_map.erase(guess[i]);
         }
     }
 
