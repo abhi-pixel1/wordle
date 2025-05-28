@@ -15,14 +15,7 @@ This project implements an efficient Wordle assistant to help narrow down possib
 
 Your task is to efficiently filter a large dictionary of words (`n` total words) and return all valid candidates that match the accumulated description over multiple guesses.
 
-## :hammer_and_wrench: How It Works
-
-This solver uses:
-- A **Trie** data structure to store and traverse the dictionary of words.
-- A **description-based filter** (implemented via scoped letter sets and inclusion constraints).
-- A **DFS-based traversal** of the Trie to efficiently generate the list of valid words.
-
-### :blue_book: Terminology
+## :blue_book: Terminology
 
 | Term         | Description                                                                 |
 |--------------|-----------------------------------------------------------------------------|
@@ -30,17 +23,38 @@ This solver uses:
 | `n`          | Number of words in the dictionary.                                          |
 | `description`| A mapping derived from feedback (Green, Yellow, Grey) for a given guess.    |
 
-## :mag: Example
+## :receipt: Input Parser Logic (`update_description`)
 
-Given a guess: `table`  
-And feedback: `xgxyx`  
-This means:
-- `t` is not in the word (grey),
-- `a` is correct and in the correct position (green),
-- `b` is in the word but at a different position (yellow),
-- `l`, `e` are not in the word.
+The `update_description()` function processes the guess and feedback string and updates the internal state (`description`) used for filtering.
 
-The description gets updated accordingly and helps filter the dictionary.
+Wordle handles **duplicate letters** as follows:
+1. First, all **Green** (correct position) matches are processed.
+2. Then, **Yellow** matches are considered — **but only up to the remaining count** of that letter in the actual word.
+3. Extra instances of letters (duplicates) that do not qualify as Green or Yellow are marked **Grey**.
+
+### :repeat: Three-Pass Parsing Logic:
+- **Green Pass**: Fixes the exact letter at a position (`scope[i] = {guess[i]}`).
+- **Yellow Pass**: Removes the guessed letter from that specific position but includes it in the "must-be-somewhere" `include` set.
+- **Grey Pass**: Eliminates the letter entirely from all positions, **only if it has not already been used for Green or Yellow**.
+
+### Example:
+
+If the guess is `level` and feedback is `xgxyg`, the logic does:
+- Green pass: lock `e` at index 1, `l` at index 4.
+- Yellow pass: mark `v` as a misplaced but present letter.
+- Grey pass: eliminate `l` and `e` from other places, but respects that one `l` and one `e` are already in the correct place.
+
+## :mag: Description Filtering
+
+Once the internal description is updated from feedback, the program uses a **DFS-based filtering** mechanism to search the Trie:
+
+- The `filter()` function initiates a Trie traversal using the current `scope` (allowed letters per position) and `include` set (letters that must appear somewhere).
+- Only branches of the Trie that match the constraints are explored.
+- A word is only added to the results if:
+  - It is a complete word (`isEnd()` is true).
+  - It contains **all letters** from the `include` set (i.e., Yellow-marked letters).
+
+This traversal is highly optimized because it prunes entire subtrees based on invalid letters at each position — making the filtering **independent of the total size of the Trie**.
 
 ## Input Format
 On each iteration, input your guess and the feedback in this format:
@@ -70,17 +84,19 @@ The program will print all matching words that comply with the cumulative descri
 ### :stopwatch: Time Complexity:
 - Insertion of all words: O(n * L)
 - Each guess filtering:
-    - Worst-case DFS traversal: O(k), where k is the number of matching nodes in the Trie, bounded by filtered candidate words.
-    - Filtering is pruned using scoped allowed characters and inclusion set.
+    - Uses DFS traversal with early pruning based on scoped letter constraints and the `include` set.
+    - The time taken by `filter()` is independent of the total number of words n in the Trie, because it only explores valid branches allowed by the current `description`.
+    - **Effective filtering time is proportional to the number of valid candidates, not the size of the full dictionary.**
 
 **Efficient for reasonable dictionary sizes** (n ≈ 10⁴–10⁵).
 
-## :brain: Features & Design Highlights
+## :open_file_folder: Dictionary Source
 
-- Robust Feedback Handling: Handles multiple occurrences of letters gracefully using a per-letter feed_map.
-- Efficient Filtering: Prunes non-matching branches early using scope constraints and inclusion requirements.
-- Flexible Word Length (L): Works for any word length by changing a single parameter.
-- Real-Time Iteration: Interactive loop allows continuous guessing and feedback.
+This project uses a word list originally compiled by Donald Knuth for the Stanford Graph Base (SGB), specifically:
+
+- File: [sgb_words.txt](https://people.sc.fsu.edu/~jburkardt/datasets/words/sgb_words.txt)
+- [Source](https://people.sc.fsu.edu/~jburkardt/datasets/words/words.html)
+- Description: A curated list of 5,757 five-letter words used for algorithmic demonstrations.
 
 ## :godmode: Author
 
