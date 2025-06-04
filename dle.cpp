@@ -96,14 +96,15 @@ public:
 
         map<char, int> char_freq;
         for(int i=0; i<word_length; i++){
-            char_freq[guess[i]]++;
+            if(feedback[i]=='g' || feedback[i]=='y'){
+                char_freq[guess[i]]++;
+            }
         }
 
         // green pass
         for(int i=0; i<word_length; i++){
             if(feedback[i] == 'g' && char_freq[guess[i]]){
                 scope[i] = {guess[i]};
-                char_freq[guess[i]]--;
             }
         }
 
@@ -112,17 +113,15 @@ public:
             if(feedback[i] == 'y' && char_freq[guess[i]]){
                 scope[i].erase(std::remove(scope[i].begin(), scope[i].end(), guess[i]), scope[i].end()); // Erase–remove idiom
                 include.insert(guess[i]);
-                char_freq[guess[i]]--;
             }
         }
 
         // grey pass
         for(int i=0; i<word_length; i++){
-            if(feedback[i] == 'x' && char_freq[guess[i]]){
+            if(feedback[i] == 'x' && !char_freq[guess[i]]){
                for(int j=0; j<word_length; j++){
                     scope[j].erase(std::remove(scope[j].begin(), scope[j].end(), guess[i]), scope[j].end());
                 }
-                char_freq[guess[i]]--;
             }
         }
     }
