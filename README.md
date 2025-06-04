@@ -1,3 +1,6 @@
+<h1 align="center">
+<img src="./media/wordle_lineup.png" width="800">
+</h1><br>
 
 # Wordle Solver using Trie
 
